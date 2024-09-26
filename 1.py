@@ -18,12 +18,12 @@ Image.MAX_IMAGE_PIXELS = None
 def configurar_driver(ancho, alto):
     """Configura y retorna el controlador de Selenium."""
     options = Options()
-    #options.add_argument("--headless")  # Ejecutar en segundo plano
+    options.add_argument("--headless")  # Ejecutar en segundo plano
     options.add_argument("--disable-gpu")
-    #options.add_argument('--ignore-certificate-errors')
-    #options.add_argument('--disable-web-security')
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--disable-web-security')
     options.add_argument(f"--window-size={ancho},{alto}")
-    #options.add_argument('--allow-insecure-localhost')
+    options.add_argument('--allow-insecure-localhost')
     options.page_load_strategy = 'eager'
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
@@ -35,9 +35,9 @@ def extraer_relevant_part(url):
     return path_parts[2] if len(path_parts) > 2 else None
 
 
-def ingresar_capitulo(link_manga, capitulo):
+def ingresar_capitulo(link_manga, capitulo,nombre):
     """Ingresa al capítulo especificado de un manga y retorna la nueva URL."""
-    driver = configurar_driver(ancho=200, alto=300)
+    driver = configurar_driver(200,300)
     new_url = None
 
     try:
@@ -45,10 +45,11 @@ def ingresar_capitulo(link_manga, capitulo):
 
         # Intentar hacer clic en el capítulo
         try:
+            # Usar By.PARTIAL_LINK_TEXT para buscar enlaces que contengan "Capítulo X.00"
             chapter_link = driver.find_element(
-                By.LINK_TEXT, f"Capítulo {capitulo}.00")
+                By.PARTIAL_LINK_TEXT, f"Capítulo {capitulo}")
             chapter_link.click()
-            print(f"Capítulo {capitulo} encontrado y clickeado.")
+            print(f"Capítulo {capitulo} de {nombre} encontrado y clickeado.")
         except NoSuchElementException:
             print(f"No se encontró el enlace al capítulo {capitulo}.")
             return new_url  # Salir si no se encuentra el capítulo
@@ -59,7 +60,7 @@ def ingresar_capitulo(link_manga, capitulo):
         # Iterar sobre cada enlace para encontrar el correspondiente al capítulo
         collapsible_id = None
         for link in chapter_links:
-            if f"Capítulo {capitulo}.00" in link.text:
+            if f"Capítulo {capitulo}" in link.text:
                 # Extraer el id del div correspondiente
                 collapsible_id = link.get_attribute("onclick").split("'")[1]
                 print(f"ID del div colapsable: {collapsible_id}")
@@ -120,7 +121,7 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
         new_height = driver.execute_script("return document.body.scrollHeight")
         total_scrolls += 1
 
-        print(f"Desplazamiento {total_scrolls}: {scroll_increment}px. "
+        print(f"Desplazamiento {total_scrolls}:"
               f"Nueva altura: {new_height}px. Anterior: {last_height}px.")
 
         if new_height == last_height:
@@ -184,31 +185,51 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
 
 def descargar_manga(nombre, link_manga, capitulo, partes):
     imagen = f"{nombre} - {capitulo}.png"
-    nueva_url = ingresar_capitulo(link_manga, capitulo)
+    nueva_url = ingresar_capitulo(link_manga, capitulo, nombre)
 
     if nueva_url:
         print("Nueva URL:", nueva_url)
 
+    # driver = configurar_driver(ancho=2560, alto=1440)
     driver = configurar_driver(ancho=1920, alto=1080)
+    #driver = configurar_driver(ancho=1080, alto=1920)
+    # driver = configurar_driver(ancho=200, alto=300)
 
     try:
         driver.get(nueva_url)
-        
+
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
-        
+
         desplazamiento_paginas(driver)
 
         # Tomar captura de pantalla de toda la página
-        try:
-            sacar_screenshot(driver, imagen)
-            if os.path.exists(imagen):
-                dividir_imagenes(imagen, partes, nombre, capitulo)
-            else:
-                print(f"La imagen {imagen} no se pudo guardar correctamente.")
-        except Exception as e:
-            print(f"Se produjo un error al tomar la captura: {e}")
+        intentos = 1  # Contador de intentos
+        max_intentos = 4  # Número máximo de intentos
+
+        while intentos < max_intentos:
+            try:
+                sacar_screenshot(driver, imagen)
+                if os.path.exists(imagen):
+                    dividir_imagenes(imagen, partes, nombre, capitulo)
+                    break  # Salir del bucle si se guarda correctamente
+                else:
+                    print(f"La imagen {imagen} no se pudo guardar correctamente.")
+                    intentos += 1  # Aumentar el contador de intentos
+                    print(
+                        f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
+                    # Volver a desplazar páginas
+                    desplazamiento_paginas(driver)
+            except Exception as e:
+                if isinstance(e, TimeoutException):
+                    print(f"Se supero el tiempo determinado al intentar tomar la captura de la pagina")
+                else:
+                    print(f"Se produjo un error al tomar la captura: {e}")
+
+                intentos += 1  # Aumentar el contador de intentos
+                print(f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
+                desplazamiento_paginas(driver)  # Volver a desplazar páginas
 
     except Exception as e:
         print(f"Se produjo un error: {e}")
@@ -221,14 +242,13 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
         print(f"La imagen {imagen} no se encontró.")
 
 
-
 if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
         {
-            "nombre": "Isekai de Tochi wo Katte Noujou wo Tsukurou",
-            "link_manga": "https://lectortmo.com/library/manga/47114/isekai-de-tochi-wo-katte-noujou-wo-tsukurou",
-            "capitulo": "44"
+            "nombre": "Lo siento, pero no me gusta el Yuri",
+            "link_manga": "https://lectortmo.com/library/manga/57343/lo-siento-pero-no-me-gusta-el-yuri",
+            "capitulo": "39"
         }
         # Agrega más mangas según sea necesario
     ]
@@ -236,4 +256,4 @@ if __name__ == "__main__":
     # Procesar cada manga en la lista
     for manga in mangas:
         descargar_manga(manga['nombre'], manga['link_manga'],
-                       manga['capitulo'],partes=10)
+                        manga['capitulo'], partes=10)
