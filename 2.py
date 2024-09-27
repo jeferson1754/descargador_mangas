@@ -136,23 +136,23 @@ def ingresar_capitulo(link_manga, capitulo,nombre):
         return new_url
 
 
-def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15):
-    """Desplaza suavemente hacia abajo en la página completa."""
+def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls = 100):
+    """Desplaza suavemente hacia abajo en la página completa, pero se detiene si el número de desplazamientos supera los 100."""
     last_height = driver.execute_script("return document.body.scrollHeight")
     same_height_count = 0
     total_scrolls = 0
 
+
     print("Comenzando desplazamiento...")
 
-    while same_height_count < max_same_height:
+    while same_height_count < max_same_height and total_scrolls < max_scrolls:
         driver.execute_script(f"window.scrollBy(0, {scroll_increment});")
         time.sleep(pause_time)
 
         new_height = driver.execute_script("return document.body.scrollHeight")
         total_scrolls += 1
 
-        print(f"Desplazamiento {total_scrolls}:"
-              f"Nueva altura: {new_height}px. Anterior: {last_height}px.")
+        print(f"Desplazamiento {total_scrolls}: Nueva altura: {new_height}px. Anterior: {last_height}px.")
 
         if new_height == last_height:
             same_height_count += 1
@@ -161,7 +161,10 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
             same_height_count = 0
             last_height = new_height
 
-    print(f"Desplazamiento completo. Total de scrolls: {total_scrolls}")
+    if total_scrolls >= max_scrolls:
+        print(f"Desplazamiento detenido. Se alcanzó el límite de {max_scrolls} desplazamientos.")
+    else:
+        print(f"Desplazamiento completo. Total de desplazamientos: {total_scrolls}")
 
 
 def sacar_screenshot(driver, file_name):
