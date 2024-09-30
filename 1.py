@@ -1,16 +1,16 @@
 from selenium import webdriver
-import time
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urlparse
 from PIL import Image
 import os
+import time
+from functools import wraps
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -29,83 +29,90 @@ def configurar_driver(ancho, alto):
 
 
 def extraer_relevant_part(url):
-    """Extrae la parte relevante de la URL original."""
-    parsed_url = urlparse(url)
-    path_parts = parsed_url.path.split('/')
+    path_parts = urlparse(url).path.split('/')
     return path_parts[2] if len(path_parts) > 2 else None
 
 
-def ingresar_capitulo(link_manga, capitulo, nombre):
-    """Ingresa al capítulo especificado de un manga y retorna la nueva URL."""
-    driver = configurar_driver(200, 300)
-    new_url = None
-
+def clic_en_elemento(driver, by, value):
     try:
-        driver.get(link_manga)
+        elemento = driver.find_element(by, value)
+        elemento.click()
+        return True
+    except NoSuchElementException:
+        return False
 
-        # Intentar hacer clic en el capítulo
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"La función {func.__name__} tardó {
+              end_time - start_time:.4f} segundos en ejecutarse.")
+        return result
+    return wrapper
+
+
+@timer
+def procesar_manga(driver, manga):
+    try:
+        driver.get(manga['link_manga'])
         try:
-            # Usar By.PARTIAL_LINK_TEXT para buscar enlaces que contengan "Capítulo X.00"
             chapter_link = driver.find_element(
-                By.PARTIAL_LINK_TEXT, f"Capítulo {capitulo}")
+                By.PARTIAL_LINK_TEXT, f"Capítulo {manga['capitulo']}")
             chapter_link.click()
-            print(f"Capítulo {capitulo} de {nombre} encontrado y clickeado.")
+            print(f"Capítulo {manga['capitulo']} de {
+                  manga['nombre']} encontrado y clickeado.")
         except NoSuchElementException:
-            print(f"No se encontró el enlace al capítulo {capitulo}.")
-            return new_url  # Salir si no se encuentra el capítulo
+            print(f"No se encontró el enlace al capítulo {
+                  manga['capitulo']} de {manga['nombre']}.")
+            return None
 
-        # Encuentra todos los enlaces de capítulos
         chapter_links = driver.find_elements(By.CSS_SELECTOR, "a.btn-collapse")
+        collapsible_id = next((link.get_attribute("onclick").split("'")[
+                              1] for link in chapter_links if f"Capítulo {manga['capitulo']}" in link.text), None)
 
-        # Iterar sobre cada enlace para encontrar el correspondiente al capítulo
-        collapsible_id = None
-        for link in chapter_links:
-            if f"Capítulo {capitulo}" in link.text:
-                # Extraer el id del div correspondiente
-                collapsible_id = link.get_attribute("onclick").split("'")[1]
-                print(f"ID del div colapsable: {collapsible_id}")
-                break
+        if collapsible_id:
+            try:
+                collapsible_div = driver.find_element(By.ID, collapsible_id)
+                if collapsible_div.is_displayed():
+                    link_element = collapsible_div.find_element(
+                        By.CSS_SELECTOR, 'a.btn.btn-default.btn-sm')
+                    link_element.click()
+                    print(f"Clic en el enlace del capítulo {
+                          manga['capitulo']} de {manga['nombre']} realizado.")
+                else:
+                    print(f"El div del capítulo {manga['capitulo']} de {
+                          manga['nombre']} no está visible.")
+            except NoSuchElementException:
+                print(f"No se encontró el enlace del capítulo {
+                      manga['capitulo']} de {manga['nombre']} en el div colapsable.")
+            except Exception as e:
+                print(f"Ocurrió un error al procesar {manga['nombre']}: {e}")
         else:
-            print(f"No se encontró el enlace al capítulo {capitulo}.")
-            return new_url
+            print(f"No se encontró el enlace al capítulo {
+                  manga['capitulo']} de {manga['nombre']}.")
+            return None
 
-        # Buscar el div colapsable usando el ID extraído
-        try:
-            collapsible_div = driver.find_element(By.ID, collapsible_id)
-
-            # Verificar si el div está visible
-            if collapsible_div.is_displayed():
-                print(f"El div con id '{collapsible_id}' está visible.")
-                link_element = collapsible_div.find_element(
-                    By.CSS_SELECTOR, 'a.btn.btn-default.btn-sm')
-                link_element.click()
-                print("Clic en el enlace del capítulo realizado.")
-            else:
-                print(f"El div con id '{collapsible_id}' no está visible.")
-        except NoSuchElementException:
-            print("No se encontró el enlace del capítulo en el div colapsable.")
-        except Exception as e:
-            print("Ocurrió un error:", e)
-
-        # Obtener la URL actual y construir la nueva URL
         current_url = driver.current_url
-        relevant_part = extraer_relevant_part(current_url)
-
-        if relevant_part:
-            new_url = f"https://zonatmo.com/viewer/{relevant_part}/cascade"
-            print("URL original:", current_url)
-            # print("Nueva URL:", new_url)
+        if "/paginated" in current_url:
+            relevant_part = extraer_relevant_part(current_url)
+            if relevant_part:
+                return f"https://zonatmo.com/viewer/{relevant_part}/cascade"
+            else:
+                print(f"No se pudo extraer la parte relevante de la URL para {
+                      manga['nombre']}.")
         else:
-            print("No se pudo extraer la parte relevante de la URL.")
-
+            print(f"La URL de {
+                  manga['nombre']} no contiene '/paginated', no se extraerá la parte relevante.")
     except (NoSuchElementException, TimeoutException, WebDriverException) as e:
-        print("Error al buscar los capítulos o con el WebDriver:", e)
+        print(f"Error al procesar {manga['nombre']}: {e}")
 
-    finally:
-        driver.quit()  # Asegurarse de cerrar el navegador
-        return new_url
+    return None
 
 
+@timer
 def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls=100):
     """Desplaza suavemente hacia abajo en la página completa, pero se detiene si el número de desplazamientos supera los 100."""
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -139,16 +146,16 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
               total_scrolls}")
 
 
+@timer
 def sacar_screenshot(driver, file_name):
     """Captura de pantalla de toda la página."""
     total_height = driver.execute_script("return document.body.scrollHeight")
-    viewport_height = driver.execute_script("return window.innerHeight")
-    # Redimensionar la ventana para la altura total
     driver.set_window_size(1920, total_height)
     driver.save_screenshot(file_name)
     print(f"Captura de pantalla guardada como: {file_name}")
 
 
+@timer
 def dividir_imagenes(image_path, num_parts, nombre, capitulo):
     # Abrir la imagen
     img = Image.open(image_path)
@@ -171,10 +178,8 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
         parts.append(part_path)
 
     # Crear un PDF a partir de las partes
-
-    # Aquí podrías tener la lógica para generar el PDF.
-    pdf_name = f"{nombre} - {capitulo}.pdf"  # Formato del nombre del PDF
-    pdf_path = os.path.join(os.getcwd(), "PDF", pdf_name)  #
+    pdf_name = f"{nombre} - {capitulo}.pdf"
+    pdf_path = os.path.join(os.getcwd(), "PDF", pdf_name)
 
     images = [Image.open(part) for part in parts]
     images[0].save(pdf_path, save_all=True, append_images=images[1:])
@@ -183,75 +188,74 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
     for part in parts:
         os.remove(part)
 
-    # Eliminar la imagen original si lo deseas
-
-    print(f"PDF {pdf_name} creado exitosamente")
+    print(f"PDF {pdf_name} creado exitosamente.")
 
 
-def descargar_manga(nombre, link_manga, capitulo, partes, max_intentos):
-    imagen = f"{nombre} - {capitulo}.png"
-    nueva_url = ingresar_capitulo(link_manga, capitulo, nombre)
-
-    if nueva_url:
-        print("Nueva URL:", nueva_url)
-
-    # driver = configurar_driver(ancho=2560, alto=1440)
+@timer
+def descargar_manga(mangas, max_intentos, partes):
     driver = configurar_driver(ancho=1920, alto=1080)
-    # driver = configurar_driver(ancho=1080, alto=1920)
-    # driver = configurar_driver(ancho=200, alto=300)
+
+    resultados = {'correctos': 0, 'errores': 0}
 
     try:
-        driver.get(nueva_url)
+        for manga in mangas:
+            imagen = f"{manga['nombre']} - {manga['capitulo']}.png"
+            nueva_url = procesar_manga(driver, manga)
+            if nueva_url:
+                print(f"Nueva URL para {manga['nombre']}: {nueva_url}")
+                driver.get(nueva_url)
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body")))
+                desplazamiento_paginas(driver)
 
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.TAG_NAME, "body"))
-        )
+                # Tomar captura de pantalla de toda la página
+                intentos = 1  # Contador de intentos
 
-        desplazamiento_paginas(driver)
+                while intentos < max_intentos:
+                    try:
+                        sacar_screenshot(driver, imagen)
+                        if os.path.exists(imagen):
+                            dividir_imagenes(
+                                imagen, partes, manga['nombre'], manga['capitulo'])
+                            resultados['correctos'] += 1
+                            break  # Salir del bucle si se guarda correctamente
+                        else:
+                            print(f"La imagen {
+                                  imagen} no se pudo guardar correctamente.")
+                    except Exception as e:
+                        if isinstance(e, TimeoutException):
+                            print(
+                                f"Se superó el tiempo determinado al intentar tomar la captura de la página")
+                        else:
+                            print(
+                                f"Se produjo un error al tomar la captura: {e}")
 
-        # Tomar captura de pantalla de toda la página
-        intentos = 1  # Contador de intentos
+                        intentos += 1  # Aumentar el contador de intentos
+                        print(
+                            f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
+                        # Volver a desplazar páginas
+                        desplazamiento_paginas(driver)
+            else:
+                print(f"No se pudo obtener una nueva URL para {
+                      manga['nombre']} capítulo {manga['capitulo']}.")
+                resultados['errores'] += 1
 
-        while intentos < max_intentos:
-            try:
-                sacar_screenshot(driver, imagen)
-                if os.path.exists(imagen):
-                    dividir_imagenes(imagen, partes, nombre, capitulo)
-                    break  # Salir del bucle si se guarda correctamente
-                else:
-                    print(f"La imagen {
-                          imagen} no se pudo guardar correctamente.")
-                    intentos += 1  # Aumentar el contador de intentos
-                    print(
-                        f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
-                    # Volver a desplazar páginas
-                    desplazamiento_paginas(driver)
-            except Exception as e:
-                if isinstance(e, TimeoutException):
-                    print(
-                        f"Se supero el tiempo determinado al intentar tomar la captura de la pagina")
-                else:
-                    print(f"Se produjo un error al tomar la captura: {e}")
-
-                intentos += 1  # Aumentar el contador de intentos
-                print(
-                    f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
-                desplazamiento_paginas(driver)  # Volver a desplazar páginas
-
-    except Exception as e:
-        print(f"Se produjo un error: {e}")
     finally:
         driver.quit()
 
-    if os.path.exists(imagen):
-        dividir_imagenes(imagen, partes, nombre, capitulo)
-    else:
-        print(f"La imagen {imagen} no se encontró.")
+    print("\nResumen de resultados:")
+    print(f"Correctos: {resultados['correctos']}")
+    print(f"Errores: {resultados['errores']}")
 
 
 if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
+        {
+            "nombre": "Hazure Skill “Gacha” de Tsuihō sa Reta Ore wa, Wagamama Osananajimi o Zetsuen Shi Kakusei Suru",
+            "link_manga": "https://lectortmo.com/library/manga/57387/hazure-skill-gacha-de-tsuihou-sareta-ore-wa-wagamama-osananajimi-wo-zetsuen-shi-kakusei-suru",
+            "capitulo": "19"
+        },
         {
             "nombre": "The Reincarnated Inferior Magic Swordsman",
             "link_manga": "https://lectortmo.com/library/manga/51226/rettou-hito-no-maken-tsukai-sukiruboudo-wo-kushi-shite-saikyou-ni-itaru",
@@ -261,6 +265,4 @@ if __name__ == "__main__":
     ]
 
     # Procesar cada manga en la lista
-    for manga in mangas:
-        descargar_manga(manga['nombre'], manga['link_manga'],
-                        manga['capitulo'], partes=10, max_intentos=3)
+    descargar_manga(mangas, max_intentos=3, partes=10)
