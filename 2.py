@@ -64,9 +64,9 @@ def extraer_relevant_part(url):
     return path_parts[2] if len(path_parts) > 2 else None
 
 
-def ingresar_capitulo(link_manga, capitulo,nombre):
+def ingresar_capitulo(link_manga, capitulo, nombre):
     """Ingresa al capítulo especificado de un manga y retorna la nueva URL."""
-    driver = configurar_driver(200,300)
+    driver = configurar_driver(200, 300)
     new_url = None
 
     try:
@@ -82,7 +82,6 @@ def ingresar_capitulo(link_manga, capitulo,nombre):
         except NoSuchElementException:
             print(f"No se encontró el enlace al capítulo {capitulo}.")
             return new_url  # Salir si no se encuentra el capítulo
-
 
         # Encuentra todos los enlaces de capítulos
         chapter_links = driver.find_elements(By.CSS_SELECTOR, "a.btn-collapse")
@@ -122,7 +121,7 @@ def ingresar_capitulo(link_manga, capitulo,nombre):
         relevant_part = extraer_relevant_part(current_url)
 
         if relevant_part:
-            new_url = f"https://visortmo.com/viewer/{relevant_part}/cascade"
+            new_url = f"https://zonatmo.com/viewer/{relevant_part}/cascade"
             print("URL original:", current_url)
             # print("Nueva URL:", new_url)
         else:
@@ -136,12 +135,11 @@ def ingresar_capitulo(link_manga, capitulo,nombre):
         return new_url
 
 
-def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls = 100):
+def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls=100):
     """Desplaza suavemente hacia abajo en la página completa, pero se detiene si el número de desplazamientos supera los 100."""
     last_height = driver.execute_script("return document.body.scrollHeight")
     same_height_count = 0
     total_scrolls = 0
-
 
     print("Comenzando desplazamiento...")
 
@@ -152,7 +150,8 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
         new_height = driver.execute_script("return document.body.scrollHeight")
         total_scrolls += 1
 
-        print(f"Desplazamiento {total_scrolls}: Nueva altura: {new_height}px. Anterior: {last_height}px.")
+        print(f"Desplazamiento {total_scrolls}: Nueva altura: {
+              new_height}px. Anterior: {last_height}px.")
 
         if new_height == last_height:
             same_height_count += 1
@@ -162,9 +161,11 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
             last_height = new_height
 
     if total_scrolls >= max_scrolls:
-        print(f"Desplazamiento detenido. Se alcanzó el límite de {max_scrolls} desplazamientos.")
+        print(f"Desplazamiento detenido. Se alcanzó el límite de {
+              max_scrolls} desplazamientos.")
     else:
-        print(f"Desplazamiento completo. Total de desplazamientos: {total_scrolls}")
+        print(f"Desplazamiento completo. Total de desplazamientos: {
+              total_scrolls}")
 
 
 def sacar_screenshot(driver, file_name):
@@ -216,7 +217,7 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
     print(f"PDF {pdf_name} creado exitosamente")
 
 
-def descargar_manga(nombre, link_manga, capitulo, partes):
+def descargar_manga(nombre, link_manga, capitulo, partes, max_intentos):
     imagen = f"{nombre} - {capitulo}.png"
     nueva_url = ingresar_capitulo(link_manga, capitulo, nombre)
 
@@ -225,7 +226,7 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
 
     # driver = configurar_driver(ancho=2560, alto=1440)
     driver = configurar_driver(ancho=1920, alto=1080)
-    #driver = configurar_driver(ancho=1080, alto=1920)
+    # driver = configurar_driver(ancho=1080, alto=1920)
     # driver = configurar_driver(ancho=200, alto=300)
 
     try:
@@ -239,7 +240,7 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
 
         # Tomar captura de pantalla de toda la página
         intentos = 1  # Contador de intentos
-        max_intentos = 4  # Número máximo de intentos
+  # Número máximo de intentos
 
         while intentos < max_intentos:
             try:
@@ -248,7 +249,8 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
                     dividir_imagenes(imagen, partes, nombre, capitulo)
                     break  # Salir del bucle si se guarda correctamente
                 else:
-                    print(f"La imagen {imagen} no se pudo guardar correctamente.")
+                    print(f"La imagen {
+                          imagen} no se pudo guardar correctamente.")
                     intentos += 1  # Aumentar el contador de intentos
                     print(
                         f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
@@ -256,12 +258,14 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
                     desplazamiento_paginas(driver)
             except Exception as e:
                 if isinstance(e, TimeoutException):
-                    print(f"Se supero el tiempo determinado al intentar tomar la captura de la pagina")
+                    print(
+                        f"Se supero el tiempo determinado al intentar tomar la captura de la pagina")
                 else:
                     print(f"Se produjo un error al tomar la captura: {e}")
 
                 intentos += 1  # Aumentar el contador de intentos
-                print(f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
+                print(
+                    f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
                 desplazamiento_paginas(driver)  # Volver a desplazar páginas
 
     except Exception as e:
@@ -277,18 +281,20 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
 
 def eliminar_imagenes_png():
     """Elimina todas las imágenes en formato PNG en la carpeta actual tras confirmación."""
-    archivos_png = [archivo for archivo in os.listdir('.') if archivo.endswith('.png')]
-    
+    archivos_png = [archivo for archivo in os.listdir(
+        '.') if archivo.endswith('.png')]
+
     if not archivos_png:
         print("No se encontraron imágenes PNG en la carpeta actual.")
         return
-    
+
     print(f"Se encontraron las siguientes imágenes PNG:")
     for archivo in archivos_png:
         print(archivo)
 
-    confirmar = input(f"¿Estás seguro de que deseas eliminar estas imágenes? (Presiona Enter para confirmar): ")
-    
+    confirmar = input(
+        f"¿Estás seguro de que deseas eliminar estas imágenes? (Presiona Enter para confirmar): ")
+
     if confirmar == '':
         for archivo in archivos_png:
             try:
@@ -301,7 +307,7 @@ def eliminar_imagenes_png():
 
 
 if __name__ == "__main__":
-    
+
     exitosos = []
     errores = []
 
@@ -318,10 +324,14 @@ if __name__ == "__main__":
     # Procesar cada manga en la lista extraída
     for manga in data:
         try:
-            descargar_manga(manga['nombre'], manga['enlace'], manga['capitulo faltante'], partes=10)
-            exitosos.append(manga['nombre'])  # Agregar a la lista de exitosos
+            descargar_manga(manga['nombre'], manga['enlace'],
+                            manga['capitulo faltante'], partes=10)
+            # Agregar a la lista de exitosos
+            exitosos.append(manga['nombre'], max_intentos=4)
+
         except Exception as e:
-            errores.append((manga['nombre'], str(e)))  # Agregar a la lista de errores
+            # Agregar a la lista de errores
+            errores.append((manga['nombre'], str(e)))
 
     print("\nResumen del proceso:\n")
     print("Mangas procesados correctamente:")
@@ -331,6 +341,6 @@ if __name__ == "__main__":
     print("\nMangas con errores:")
     for manga, error in errores:
         print(f"- {manga}: {error}")
-        
+
     # Llamar a la función
     eliminar_imagenes_png()

@@ -35,9 +35,9 @@ def extraer_relevant_part(url):
     return path_parts[2] if len(path_parts) > 2 else None
 
 
-def ingresar_capitulo(link_manga, capitulo,nombre):
+def ingresar_capitulo(link_manga, capitulo, nombre):
     """Ingresa al capítulo especificado de un manga y retorna la nueva URL."""
-    driver = configurar_driver(200,300)
+    driver = configurar_driver(200, 300)
     new_url = None
 
     try:
@@ -92,7 +92,7 @@ def ingresar_capitulo(link_manga, capitulo,nombre):
         relevant_part = extraer_relevant_part(current_url)
 
         if relevant_part:
-            new_url = f"https://visortmo.com/viewer/{relevant_part}/cascade"
+            new_url = f"https://zonatmo.com/viewer/{relevant_part}/cascade"
             print("URL original:", current_url)
             # print("Nueva URL:", new_url)
         else:
@@ -106,12 +106,11 @@ def ingresar_capitulo(link_manga, capitulo,nombre):
         return new_url
 
 
-def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls = 100):
+def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls=100):
     """Desplaza suavemente hacia abajo en la página completa, pero se detiene si el número de desplazamientos supera los 100."""
     last_height = driver.execute_script("return document.body.scrollHeight")
     same_height_count = 0
     total_scrolls = 0
-
 
     print("Comenzando desplazamiento...")
 
@@ -122,7 +121,8 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
         new_height = driver.execute_script("return document.body.scrollHeight")
         total_scrolls += 1
 
-        print(f"Desplazamiento {total_scrolls}: Nueva altura: {new_height}px. Anterior: {last_height}px.")
+        print(f"Desplazamiento {total_scrolls}: Nueva altura: {
+              new_height}px. Anterior: {last_height}px.")
 
         if new_height == last_height:
             same_height_count += 1
@@ -132,9 +132,11 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
             last_height = new_height
 
     if total_scrolls >= max_scrolls:
-        print(f"Desplazamiento detenido. Se alcanzó el límite de {max_scrolls} desplazamientos.")
+        print(f"Desplazamiento detenido. Se alcanzó el límite de {
+              max_scrolls} desplazamientos.")
     else:
-        print(f"Desplazamiento completo. Total de desplazamientos: {total_scrolls}")
+        print(f"Desplazamiento completo. Total de desplazamientos: {
+              total_scrolls}")
 
 
 def sacar_screenshot(driver, file_name):
@@ -186,7 +188,7 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
     print(f"PDF {pdf_name} creado exitosamente")
 
 
-def descargar_manga(nombre, link_manga, capitulo, partes):
+def descargar_manga(nombre, link_manga, capitulo, partes, max_intentos):
     imagen = f"{nombre} - {capitulo}.png"
     nueva_url = ingresar_capitulo(link_manga, capitulo, nombre)
 
@@ -195,7 +197,7 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
 
     # driver = configurar_driver(ancho=2560, alto=1440)
     driver = configurar_driver(ancho=1920, alto=1080)
-    #driver = configurar_driver(ancho=1080, alto=1920)
+    # driver = configurar_driver(ancho=1080, alto=1920)
     # driver = configurar_driver(ancho=200, alto=300)
 
     try:
@@ -209,7 +211,6 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
 
         # Tomar captura de pantalla de toda la página
         intentos = 1  # Contador de intentos
-        max_intentos = 4  # Número máximo de intentos
 
         while intentos < max_intentos:
             try:
@@ -218,7 +219,8 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
                     dividir_imagenes(imagen, partes, nombre, capitulo)
                     break  # Salir del bucle si se guarda correctamente
                 else:
-                    print(f"La imagen {imagen} no se pudo guardar correctamente.")
+                    print(f"La imagen {
+                          imagen} no se pudo guardar correctamente.")
                     intentos += 1  # Aumentar el contador de intentos
                     print(
                         f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
@@ -226,12 +228,14 @@ def descargar_manga(nombre, link_manga, capitulo, partes):
                     desplazamiento_paginas(driver)
             except Exception as e:
                 if isinstance(e, TimeoutException):
-                    print(f"Se supero el tiempo determinado al intentar tomar la captura de la pagina")
+                    print(
+                        f"Se supero el tiempo determinado al intentar tomar la captura de la pagina")
                 else:
                     print(f"Se produjo un error al tomar la captura: {e}")
 
                 intentos += 1  # Aumentar el contador de intentos
-                print(f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
+                print(
+                    f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
                 desplazamiento_paginas(driver)  # Volver a desplazar páginas
 
     except Exception as e:
@@ -249,9 +253,9 @@ if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
         {
-            "nombre": "Isekai de Tochi wo Katte Noujou wo Tsukurou",
-            "link_manga": "https://lectortmo.com/library/manga/47114/isekai-de-tochi-wo-katte-noujou-wo-tsukurou",
-            "capitulo": "44"
+            "nombre": "The Reincarnated Inferior Magic Swordsman",
+            "link_manga": "https://lectortmo.com/library/manga/51226/rettou-hito-no-maken-tsukai-sukiruboudo-wo-kushi-shite-saikyou-ni-itaru",
+            "capitulo": "79"
         }
         # Agrega más mangas según sea necesario
     ]
@@ -259,4 +263,4 @@ if __name__ == "__main__":
     # Procesar cada manga en la lista
     for manga in mangas:
         descargar_manga(manga['nombre'], manga['link_manga'],
-                        manga['capitulo'], partes=10)
+                        manga['capitulo'], partes=10, max_intentos=3)
