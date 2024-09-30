@@ -111,6 +111,7 @@ def procesar_manga(driver, manga):
 
     return None
 
+
 @timer
 def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls=100):
     """Desplaza suavemente hacia abajo en la página completa, pero se detiene si el número de desplazamientos supera los 100."""
@@ -191,9 +192,9 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
 
 
 @timer
-def descargar_manga(mangas):
+def descargar_manga(mangas, max_intentos, partes):
     driver = configurar_driver(ancho=1920, alto=1080)
-    partes = 10
+
     resultados = {'correctos': 0, 'errores': 0}
 
     try:
@@ -209,7 +210,6 @@ def descargar_manga(mangas):
 
                 # Tomar captura de pantalla de toda la página
                 intentos = 1  # Contador de intentos
-                max_intentos = 4  # Número máximo de intentos
 
                 while intentos < max_intentos:
                     try:
@@ -252,12 +252,12 @@ if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
         {
-            "nombre": "MAOU NI NATTA NODE, DUNGEON TSUKUTTE JINGAI MUSUME TO HONOBONO SURU",
-            "link_manga": "https://lectortmo.com/library/manga/38899/maou-ni-natta-node-dungeon-tsukutte-jingai-musume-to-honobono-suru",
-            "capitulo": "61.20"
+            "nombre": "Yuusha Shoukan ni Makikomareta kedo, Isekai wa Heiwa deshita",
+            "link_manga": "https://lectortmo.com/library/manga/46727/yuusha-shoukan-ni-makikomareta-kedo-isekai-wa-heiwa-deshita",
+            "capitulo": "52"
         }
         # Agrega más mangas según sea necesario
     ]
 
     # Procesar cada manga en la lista
-    descargar_manga(mangas)
+    descargar_manga(mangas, max_intentos=3, partes=10)
