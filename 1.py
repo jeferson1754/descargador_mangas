@@ -104,7 +104,8 @@ def procesar_manga(driver, manga):
                 print(f"No se pudo extraer la parte relevante de la URL para {
                       manga['nombre']}.")
         else:
-            print(f"La URL de {manga['nombre']} no contiene '/paginated', no se extraerá la parte relevante.")
+            print(f"La URL de {
+                  manga['nombre']} no contiene '/paginated', no se extraerá la parte relevante.")
     except (NoSuchElementException, TimeoutException, WebDriverException) as e:
         print(f"Error al procesar {manga['nombre']}: {e}")
 
@@ -191,13 +192,12 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
 
 
 @timer
-def descargar_manga(mangas, max_intentos, partes):
+def descargar_manga(manga, max_intentos, partes):
     driver = configurar_driver(ancho=1920, alto=1080)
 
     try:
-        for manga in mangas:
             imagen = f"{manga['nombre']} - {manga['capitulo']}.png"
-            intentos = 0  # Reiniciar intentos para cada manga
+            intentos = 1  # Reiniciar intentos para cada manga
             while intentos < max_intentos:  # REVISAR ESTA PARTE
                 nueva_url = procesar_manga(driver, manga)
                 if nueva_url:
@@ -235,26 +235,48 @@ def descargar_manga(mangas, max_intentos, partes):
                 else:
                     print(f"No se pudo obtener una nueva URL para {
                           manga['nombre']} capítulo {manga['capitulo']}.")
-
-        if os.path.exists(imagen):
-            dividir_imagenes(
-                imagen, partes, manga['nombre'], manga['capitulo'])
-        else:
-            print(f"La imagen {imagen} no se encontró.")
-
     finally:
         driver.quit()
 
 
 if __name__ == "__main__":
+
+    exitosos = []
+    errores = []
+    
     # Lista de mangas a procesar
     mangas = [
+
         {
-            "nombre": "Saikyou Juzoku Tensei: Cheat Majutsushi no Slow Life",
-            "link_manga": "https://lectortmo.com/library/manga/43676/saikyou-juzoku-tensei-majutsu-otaku-no-risoukyou",
-            "capitulo": "27"
+            "nombre": "Isekai Tensei no Boukensha",
+            "link_manga": "https://lectortmo.com/library/manga/42482/isekai-tensei-no-boukensha",
+            "capitulo": "20.20"
         }
     ]
 
-    # Procesar cada manga en la lista
-    descargar_manga(mangas, max_intentos=3, partes=15)
+
+    try:
+        for manga in mangas:
+            descargar_manga(
+                manga['nombre'],
+                manga['link_manga'],
+                manga['capitulo'],
+                partes=15,
+                max_intentos=2  # Asegúrate de pasar el valor de max_intentos aquí
+            )
+
+                # Agregar a la lista de exitosos
+            exitosos.append(manga['nombre'])
+
+    except Exception as e:
+            # Agregar a la lista de errores
+        errores.append((mangas['nombre'], str(e)))
+
+    print("\nResumen del proceso:")
+    print("\nMangas procesados correctamente:")
+    for manga in exitosos:
+        print(f"- {manga}")
+
+    print("\nMangas con errores:")
+    for manga, error in errores:
+        print(f"- {manga}: {error}")

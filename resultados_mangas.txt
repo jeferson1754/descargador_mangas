@@ -1,0 +1,27 @@
+Cantidad de mangas extraídos: 10
+
+----------------------------------------
+"nombre": "Saikyou Juzoku Tensei: Cheat Majutsushi no Slow Life",
+"link_manga": "https://lectortmo.com/library/manga/43676/saikyou-juzoku-tensei-majutsu-otaku-no-risoukyou",
+"capitulo": "27"
+----------------------------------------
+"nombre": "Saikyou no Maou ni Kitaerareta Yuusha, Isekai Kikansha-tachi no Gakuen de Musou suru",
+"link_manga": "https://lectortmo.com/library/manga/67943/saikyou-no-maou-ni-kitaerareta-yuusha-isekai-kikanshatati-no-gakuen-de-musou-suru",
+"capitulo": "16"
+----------------------------------------
+"nombre": "Kaifuku Jutsushi no Yarinaoshi",
+"link_manga": "https://lectortmo.com/library/manga/28551/kaifuku-jutsushi-no-yarinaoshi",
+"capitulo": "63"
+----------------------------------------
+"nombre": "Lo siento, pero no me gusta el Yuri",
+"link_manga": "https://lectortmo.com/library/manga/57343/lo-siento-pero-no-me-gusta-el-yuri",
+"capitulo": "39"
+----------------------------------------
+"nombre": "El que sube de nivel mas rapido",
+"link_manga": "https://lectortmo.com/library/manga/58624/sekai-saisoku-no-level-up",
+"capitulo": "21"
+----------------------------------------
+"nombre": "Isekai de Tochi wo Katte Noujou wo Tsukurou",
+"link_manga": "https://lectortmo.com/library/manga/47114/isekai-de-tochi-wo-katte-noujou-wo-tsukurou",
+"capitulo": "44"
+----------------------------------------

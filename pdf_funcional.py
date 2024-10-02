@@ -24,7 +24,7 @@ async def save_as_pdf(url, output_path):
     await browser.close()
 
 async def main():
-    await save_as_pdf('https://amazon.com', 'output.pdf')
+    await save_as_pdf('https://mercadolibre.cl', 'output.pdf')
 
 if __name__ == "__main__":
     asyncio.run(main())
