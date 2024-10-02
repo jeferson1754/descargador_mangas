@@ -104,8 +104,7 @@ def procesar_manga(driver, manga):
                 print(f"No se pudo extraer la parte relevante de la URL para {
                       manga['nombre']}.")
         else:
-            print(f"La URL de {
-                  manga['nombre']} no contiene '/paginated', no se extraerá la parte relevante.")
+            print(f"La URL de {manga['nombre']} no contiene '/paginated', no se extraerá la parte relevante.")
     except (NoSuchElementException, TimeoutException, WebDriverException) as e:
         print(f"Error al procesar {manga['nombre']}: {e}")
 
@@ -195,74 +194,67 @@ def dividir_imagenes(image_path, num_parts, nombre, capitulo):
 def descargar_manga(mangas, max_intentos, partes):
     driver = configurar_driver(ancho=1920, alto=1080)
 
-    resultados = {'correctos': 0, 'errores': 0}
-
     try:
         for manga in mangas:
             imagen = f"{manga['nombre']} - {manga['capitulo']}.png"
-            nueva_url = procesar_manga(driver, manga)
-            if nueva_url:
-                print(f"Nueva URL para {manga['nombre']}: {nueva_url}")
-                driver.get(nueva_url)
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.TAG_NAME, "body")))
-                desplazamiento_paginas(driver)
+            intentos = 0  # Reiniciar intentos para cada manga
+            while intentos < max_intentos:  # REVISAR ESTA PARTE
+                nueva_url = procesar_manga(driver, manga)
+                if nueva_url:
+                    print(f"Nueva URL para {manga['nombre']}: {nueva_url}")
+                    driver.get(nueva_url)
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.TAG_NAME, "body"))
+                    )
 
-                # Tomar captura de pantalla de toda la página
-                intentos = 1  # Contador de intentos
+                    # Desplazamiento de páginas
+                    desplazamiento_paginas(driver)
 
-                while intentos < max_intentos:
-                    try:
-                        sacar_screenshot(driver, imagen)
-                        if os.path.exists(imagen):
-                            dividir_imagenes(
-                                imagen, partes, manga['nombre'], manga['capitulo'])
-                            resultados['correctos'] += 1
-                            break  # Salir del bucle si se guarda correctamente
-                        else:
-                            print(f"La imagen {
-                                  imagen} no se pudo guardar correctamente.")
-                    except Exception as e:
-                        if isinstance(e, TimeoutException):
+                    while intentos < max_intentos:
+                        try:
+                            sacar_screenshot(driver, imagen)
+                            if os.path.exists(imagen):
+                                dividir_imagenes(
+                                    imagen, partes, manga['nombre'], manga['capitulo'])
+                                break  # Salir del bucle si se guarda correctamente
+                            else:
+                                print(f"La imagen {
+                                      imagen} no se pudo guardar correctamente.")
+                        except Exception as e:
+                            if isinstance(e, TimeoutException):
+                                print(
+                                    "Se superó el tiempo determinado al intentar tomar la captura de la página")
+                            else:
+                                print(
+                                    f"Se produjo un error al tomar la captura: {e}")
+
+                            intentos += 1  # Aumentar el contador de intentos
                             print(
-                                f"Se superó el tiempo determinado al intentar tomar la captura de la página")
-                        else:
-                            print(
-                                f"Se produjo un error al tomar la captura: {e}")
+                                f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
+                            desplazamiento_paginas(driver, max_scrolls=50)
+                else:
+                    print(f"No se pudo obtener una nueva URL para {
+                          manga['nombre']} capítulo {manga['capitulo']}.")
 
-                        intentos += 1  # Aumentar el contador de intentos
-                        print(
-                            f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
-                        # Volver a desplazar páginas
-                        desplazamiento_paginas(driver)
-            else:
-                print(f"No se pudo obtener una nueva URL para {
-                      manga['nombre']} capítulo {manga['capitulo']}.")
-                resultados['errores'] += 1
+        if os.path.exists(imagen):
+            dividir_imagenes(
+                imagen, partes, manga['nombre'], manga['capitulo'])
+        else:
+            print(f"La imagen {imagen} no se encontró.")
 
     finally:
         driver.quit()
-
-    print("\nResumen de resultados:")
-    print(f"Correctos: {resultados['correctos']}")
-    print(f"Errores: {resultados['errores']}")
 
 
 if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
         {
-            "nombre": "Hazure Skill “Gacha” de Tsuihō sa Reta Ore wa, Wagamama Osananajimi o Zetsuen Shi Kakusei Suru",
-            "link_manga": "https://lectortmo.com/library/manga/57387/hazure-skill-gacha-de-tsuihou-sareta-ore-wa-wagamama-osananajimi-wo-zetsuen-shi-kakusei-suru",
-            "capitulo": "19"
-        },
-        {
-            "nombre": "The Reincarnated Inferior Magic Swordsman",
-            "link_manga": "https://lectortmo.com/library/manga/51226/rettou-hito-no-maken-tsukai-sukiruboudo-wo-kushi-shite-saikyou-ni-itaru",
-            "capitulo": "79"
+            "nombre": "Saikyou Juzoku Tensei: Cheat Majutsushi no Slow Life",
+            "link_manga": "https://lectortmo.com/library/manga/43676/saikyou-juzoku-tensei-majutsu-otaku-no-risoukyou",
+            "capitulo": "27"
         }
-        # Agrega más mangas según sea necesario
     ]
 
     # Procesar cada manga en la lista
-    descargar_manga(mangas, max_intentos=3, partes=10)
+    descargar_manga(mangas, max_intentos=3, partes=15)

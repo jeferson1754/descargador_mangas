@@ -117,15 +117,17 @@ def ingresar_capitulo(link_manga, capitulo, nombre):
             print("Ocurrió un error:", e)
 
         # Obtener la URL actual y construir la nueva URL
-        current_url = driver.current_url
-        relevant_part = extraer_relevant_part(current_url)
 
-        if relevant_part:
-            new_url = f"https://zonatmo.com/viewer/{relevant_part}/cascade"
-            print("URL original:", current_url)
-            # print("Nueva URL:", new_url)
+        current_url = driver.current_url
+        if "/paginated" in current_url:
+            relevant_part = extraer_relevant_part(current_url)
+            if relevant_part:
+                return f"https://zonatmo.com/viewer/{relevant_part}/cascade"
+            else:
+                print(f"No se pudo extraer la parte relevante de la URL para {
+                      manga['nombre']}.")
         else:
-            print("No se pudo extraer la parte relevante de la URL.")
+            print(f"La URL de {nombre} no contiene '/paginated', no se extraerá la parte relevante.")
 
     except (NoSuchElementException, TimeoutException, WebDriverException) as e:
         print("Error al buscar los capítulos o con el WebDriver:", e)
@@ -324,10 +326,16 @@ if __name__ == "__main__":
     # Procesar cada manga en la lista extraída
     for manga in data:
         try:
-            descargar_manga(manga['nombre'], manga['enlace'],
-                            manga['capitulo faltante'], partes=10)
+            descargar_manga(
+                manga['nombre'],
+                manga['enlace'],
+                manga['capitulo faltante'],
+                partes=15,
+                max_intentos=2  # Asegúrate de pasar el valor de max_intentos aquí
+            )
+
             # Agregar a la lista de exitosos
-            exitosos.append(manga['nombre'], max_intentos=4)
+            exitosos.append(manga['nombre'])
 
         except Exception as e:
             # Agregar a la lista de errores
