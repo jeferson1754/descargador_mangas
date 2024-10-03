@@ -139,9 +139,11 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
             last_height = new_height
 
     if total_scrolls >= max_scrolls:
-        print(f"Desplazamiento detenido. Se alcanzó el límite de {max_scrolls} desplazamientos.\n")
+        print(f"Desplazamiento detenido. Se alcanzó el límite de {
+              max_scrolls} desplazamientos.\n")
     else:
-        print(f"Desplazamiento completo. Total de desplazamientos: {total_scrolls}\n")
+        print(f"Desplazamiento completo. Total de desplazamientos: {
+              total_scrolls}\n")
 
 
 @timer
@@ -236,14 +238,14 @@ def descargar_manga(mangas, max_intentos, partes):
                       manga['nombre']} capítulo {manga['capitulo']}.")
                 resultados['errores'] += 1
 
+        if os.path.exists(imagen):
+            dividir_imagenes(imagen, partes, manga['nombre'], manga['capitulo'])
+        else:
+            print(f"La imagen {imagen} no se encontró.\n")
+            resultados['errores'] += 1
+
     finally:
         driver.quit()
-
-    if os.path.exists(imagen):
-        dividir_imagenes(imagen, partes, manga['nombre'], manga['capitulo'])
-    else:
-        print(f"La imagen {imagen} no se encontró.\n")
-        resultados['errores'] += 1
 
     print("\nResumen de resultados:")
     print(f"Correctos: {resultados['correctos']}")
@@ -254,16 +256,10 @@ if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
 
-
-        {
-            "nombre": "Isekai Yururi Kikou -Kosodateshinagara Boukensha Shimasu",
-            "link_manga": "https://lectortmo.com/library/manga/35985/isekai-yururi-kikou-kosodateshinagara-boukensha-shimasu",
-            "capitulo": "42"
-        },
         {
             "nombre": "Kuro Gyaru-san ga Kuru!",
             "link_manga": "https://lectortmo.com/library/manga/48155/kuro-gyaru-san-ga-kuru",
-            "capitulo": "31"
+            "capitulo": "30"
         }
 
 
