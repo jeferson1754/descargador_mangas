@@ -119,7 +119,7 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
     same_height_count = 0
     total_scrolls = 0
 
-    print("Comenzando desplazamiento...")
+    print("\nComenzando desplazamiento...")
 
     while same_height_count < max_same_height and total_scrolls < max_scrolls:
         driver.execute_script(f"window.scrollBy(0, {scroll_increment});")
@@ -226,8 +226,15 @@ def descargar_manga(mangas, max_intentos, partes):
                         else:
                             print(
                                 f"Se produjo un error al tomar la captura: {e}")
+
+                        if os.path.exists(imagen):
+                            dividir_imagenes(
+                                imagen, partes, manga['nombre'], manga['capitulo'])
+                        else:
+                            print(f"La imagen {imagen} no se encontró.\n")
                             resultados['errores'] += 1
 
+                        resultados['errores'] += 1
                         intentos += 1  # Aumentar el contador de intentos
                         print(
                             f"Reintentando el desplazamiento de páginas... (Intento {intentos})")
@@ -237,13 +244,6 @@ def descargar_manga(mangas, max_intentos, partes):
                 print(f"No se pudo obtener una nueva URL para {
                       manga['nombre']} capítulo {manga['capitulo']}.")
                 resultados['errores'] += 1
-
-        if os.path.exists(imagen):
-            dividir_imagenes(imagen, partes, manga['nombre'], manga['capitulo'])
-        else:
-            print(f"La imagen {imagen} no se encontró.\n")
-            resultados['errores'] += 1
-
     finally:
         driver.quit()
 
@@ -257,9 +257,14 @@ if __name__ == "__main__":
     mangas = [
 
         {
-            "nombre": "Kuro Gyaru-san ga Kuru!",
-            "link_manga": "https://lectortmo.com/library/manga/48155/kuro-gyaru-san-ga-kuru",
-            "capitulo": "30"
+            "nombre": "Otome Game Sekai wa Mob ni Kibishii Sekai Desu",
+            "link_manga": "https://lectortmo.com/library/manga/41187/otome-game-sekai-wa-mob-ni-kibishii-sekai-desu",
+            "capitulo": "67.00"
+        },
+        {
+            "nombre": "Otome Game Sekai wa Mob ni Kibishii Sekai Desu",
+            "link_manga": "https://lectortmo.com/library/manga/41187/otome-game-sekai-wa-mob-ni-kibishii-sekai-desu",
+            "capitulo": "68"
         }
 
 

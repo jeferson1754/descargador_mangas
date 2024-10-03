@@ -1,7 +1,0 @@
-Cantidad de mangas extraídos: 3
-
-----------------------------------------
-"nombre": "Kuro Gyaru-san ga Kuru!",
-"link_manga": "https://lectortmo.com/library/manga/48155/kuro-gyaru-san-ga-kuru",
-"capitulo": "31"
-----------------------------------------
