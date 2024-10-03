@@ -139,11 +139,9 @@ def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_
             last_height = new_height
 
     if total_scrolls >= max_scrolls:
-        print(f"Desplazamiento detenido. Se alcanzó el límite de {
-              max_scrolls} desplazamientos.")
+        print(f"Desplazamiento detenido. Se alcanzó el límite de {max_scrolls} desplazamientos.\n")
     else:
-        print(f"Desplazamiento completo. Total de desplazamientos: {
-              total_scrolls}")
+        print(f"Desplazamiento completo. Total de desplazamientos: {total_scrolls}\n")
 
 
 @timer
@@ -219,9 +217,6 @@ def descargar_manga(mangas, max_intentos, partes):
                                 imagen, partes, manga['nombre'], manga['capitulo'])
                             resultados['correctos'] += 1
                             break  # Salir del bucle si se guarda correctamente
-                        else:
-                            print(f"La imagen {
-                                  imagen} no se pudo guardar correctamente.")
                     except Exception as e:
                         if isinstance(e, TimeoutException):
                             print(
@@ -229,6 +224,7 @@ def descargar_manga(mangas, max_intentos, partes):
                         else:
                             print(
                                 f"Se produjo un error al tomar la captura: {e}")
+                            resultados['errores'] += 1
 
                         intentos += 1  # Aumentar el contador de intentos
                         print(
@@ -243,6 +239,12 @@ def descargar_manga(mangas, max_intentos, partes):
     finally:
         driver.quit()
 
+    if os.path.exists(imagen):
+        dividir_imagenes(imagen, partes, manga['nombre'], manga['capitulo'])
+    else:
+        print(f"La imagen {imagen} no se encontró.\n")
+        resultados['errores'] += 1
+
     print("\nResumen de resultados:")
     print(f"Correctos: {resultados['correctos']}")
     print(f"Errores: {resultados['errores']}")
@@ -251,11 +253,20 @@ def descargar_manga(mangas, max_intentos, partes):
 if __name__ == "__main__":
     # Lista de mangas a procesar
     mangas = [
+
+
         {
-            "nombre": "Isekai Tensei no Boukensha",
-            "link_manga": "https://lectortmo.com/library/manga/42482/isekai-tensei-no-boukensha",
-            "capitulo": "20.20"
+            "nombre": "Isekai Yururi Kikou -Kosodateshinagara Boukensha Shimasu",
+            "link_manga": "https://lectortmo.com/library/manga/35985/isekai-yururi-kikou-kosodateshinagara-boukensha-shimasu",
+            "capitulo": "42"
+        },
+        {
+            "nombre": "Kuro Gyaru-san ga Kuru!",
+            "link_manga": "https://lectortmo.com/library/manga/48155/kuro-gyaru-san-ga-kuru",
+            "capitulo": "31"
         }
+
+
         # Agrega más mangas según sea necesario
     ]
 
