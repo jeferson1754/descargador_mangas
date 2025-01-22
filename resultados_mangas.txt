@@ -1,0 +1,42 @@
+Cantidad de mangas extraídos: 10
+
+"nombre": "Issho ni Ken no Shugyou wo shita Osananajimi ga Dorei ni Natteita no de, S-Rank Boukensha no Boku wa Kanojo wo Katte Mamoru Koto ni shita",
+"link_manga": "https://zonatmo.com/library/manga/69549/issho-ni-ken-no-shugyou-wo-shita-osananajimi-ga-dorei-ni-natteita-no-de-s",
+"capitulo": "14"
+----------------------------------------
+"nombre": "Isekai Maou no Successor",
+"link_manga": "https://zonatmo.com/library/manga/55813/isekai-maou-no-successor",
+"capitulo": "13"
+----------------------------------------
+"nombre": "Sono Bisque Doll wa Koi wo Suru",
+"link_manga": "https://zonatmo.com/library/manga/38647/sono-bisque-doll-wa-koi-wo-suru",
+"capitulo": "113"
+----------------------------------------
+"nombre": "Shingeki no Eroko-san",
+"link_manga": "https://zonatmo.com/library/manga/47001/shingeki-no-eroko-san-hen-na-oneesan-wa-danshikousei-to-nakayoku-naritai",
+"capitulo": "43"
+----------------------------------------
+"nombre": "Class Teni de Ore dake Haburareta node, Doukyuusei Harem Tsukuru Koto ni Shita",
+"link_manga": "https://zonatmo.com/library/manga/44069/class-teni-de-ore-dake-haburareta-node-doukyuusei-harem-tsukuru-koto-ni-shita",
+"capitulo": "20"
+----------------------------------------
+"nombre": "Kyou kara Tsukaeru Yakugakuteki Osewa",
+"link_manga": "https://zonatmo.com/library/manga/61621/kyou-kara-tsukaeru-yakugakuteki-osewa",
+"capitulo": "9"
+----------------------------------------
+"nombre": "ANSATSU SKILL DE ISEKAI SAIKYOU - RENKINJUTSU TO ANSATSUJUTSU O KIWAMETA ORE WA, SEKAI O KAGE KARA SHIHAI SURU",
+"link_manga": "https://zonatmo.com/library/manga/56209/ansatsu-skill-de-isekai-saikyou-renkinjutsu-to-ansatsujutsu-o-kiwameta-ore-wa-sekai-o-kage-kara-shihai-suru",
+"capitulo": "19"
+----------------------------------------
+"nombre": "Kamiyama-san no Kamibukuro no Naka ni wa",
+"link_manga": "https://zonatmo.com/library/manga/61010/kamiyama-san-no-kamibukuro-no-naka-ni-wa",
+"capitulo": "18"
+----------------------------------------
+"nombre": "Isekai Kaeri no Yuusha ga Gendai Saikyou! Inou Battle-kei Bishoujo o Bishibashi Choukyou Suru Koto ni!?",
+"link_manga": "https://zonatmo.com/library/manga/43637/el-heroe-que-regreso-sigue-siendo-el-mas-fuerte-del-mundo-moderno",
+"capitulo": "23"
+----------------------------------------
+"nombre": "Seirei-tachi no Rakuen to Risou no Isekai Seikatsu",
+"link_manga": "https://zonatmo.com/library/manga/40495/seirei-tachi-no-rakuen-to-risou-no-isekai-seikatsu",
+"capitulo": "31"
+----------------------------------------

@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urlparse
 from PIL import Image
 import os
+import re
 import time
 from functools import wraps
 
@@ -26,6 +27,47 @@ def configurar_driver(ancho, alto):
     options.add_argument('--allow-insecure-localhost')
     options.page_load_strategy = 'eager'
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+
+def extraer_datos(url):
+    driver = configurar_driver(ancho=1920, alto=1080)
+    driver.get(url)
+
+    # Espera que la página se cargue
+    time.sleep(5)  # Ajusta el tiempo según sea necesario
+
+    # Encuentra todas las filas de la tabla
+    rows = driver.find_elements(By.TAG_NAME, "tr")
+
+    # Almacena los datos extraídos
+    data = []
+    for row in rows:
+        cols = row.find_elements(By.TAG_NAME, "td")
+        if cols:  # Comprueba si hay columnas en la fila
+            # Extrae el nombre del manga y el enlace
+            titulo_elemento = cols[0].find_element(By.TAG_NAME, "a")
+            manga_info = {
+                'nombre': titulo_elemento.text.strip(),
+                # Obtiene el enlace del título
+                'enlace': titulo_elemento.get_attribute('href'),
+                'capitulo faltante': cols[2].text.strip(),
+            }
+            data.append(manga_info)
+
+    return data
+
+
+def guardar_resultados_txt(data, filename):
+    with open(filename, 'w', encoding='utf-8') as file:
+        # Escribir el conteo de mangas
+        file.write(f"Cantidad de mangas extraídos: {len(data)}\n\n")
+
+        # Escribir los detalles de cada manga
+        for item in data:
+            file.write(f'"nombre": "{item["nombre"]}",\n')
+            file.write(f'"link_manga": "{item["enlace"]}",\n')
+            file.write(f'"capitulo": "{item["capitulo faltante"]}"\n')
+            file.write("-" * 40 + "\n")
 
 
 def extraer_relevant_part(url):
@@ -113,7 +155,7 @@ def procesar_manga(driver, manga):
 
 
 @timer
-def desplazamiento_paginas(driver, pause_time=1, scroll_increment=500, max_same_height=15, max_scrolls=100):
+def desplazamiento_paginas(driver, pause_time=3, scroll_increment=500, max_same_height=15, max_scrolls=100):
     """Desplaza suavemente hacia abajo en la página completa, pero se detiene si el número de desplazamientos supera los 100."""
     last_height = driver.execute_script("return document.body.scrollHeight")
     same_height_count = 0
@@ -252,24 +294,80 @@ def descargar_manga(mangas, max_intentos, partes):
     print(f"Errores: {resultados['errores']}")
 
 
+def leer_mangas_desde_txt(archivo_txt):
+    mangas = []
+
+    # Leer el archivo
+    with open(archivo_txt, "r", encoding="utf-8") as file:
+        contenido = file.read()
+
+    # Usar una expresión regular para extraer los datos del archivo
+    pattern = r'"nombre": "(.*?)",\s*"link_manga": "(.*?)",\s*"capitulo": "(.*?)"'
+    matches = re.findall(pattern, contenido)
+
+    for match in matches:
+        nombre, link_manga, capitulo = match
+        mangas.append({
+            "nombre": nombre,
+            "link_manga": link_manga,
+            "capitulo": capitulo
+        })
+
+    return mangas
+
+
+def eliminar_imagenes_png():
+    """Elimina todas las imágenes en formato PNG en la carpeta actual tras confirmación."""
+    archivos_png = [archivo for archivo in os.listdir(
+        '.') if archivo.endswith('.png')]
+
+    if not archivos_png:
+        print("No se encontraron imágenes PNG en la carpeta actual.")
+        return
+
+    print(f"Se encontraron las siguientes imágenes PNG:")
+    for archivo in archivos_png:
+        print(archivo)
+
+    confirmar = input(
+        f"¿Estás seguro de que deseas eliminar estas imágenes? (Presiona Enter para confirmar): ")
+
+    if confirmar == '':
+        for archivo in archivos_png:
+            try:
+                os.remove(archivo)
+                print(f"Eliminado: {archivo}")
+            except Exception as e:
+                print(f"No se pudo eliminar {archivo}: {e}")
+    else:
+        print("Eliminación cancelada.")
+
+
 if __name__ == "__main__":
+
+    # URL de la página a analizar
+    url = "http://inventarioncc.infinityfreeapp.com/Manga/?capitulos=1&accion=Filtro3"
+
+    # Extrae y muestra los datos
+    data = extraer_datos(url)
+
+    # Guardar los datos en un archivo .txt
+    guardar_resultados_txt(data, "resultados_mangas.txt")
+
+    # Conteo de mangas extraídos
+    conteo_mangas = len(data)
+
+    print(f"Cantidad de mangas extraídos: {conteo_mangas}")
+
+    for item in data:
+        print(item)
+
+    print(f"Datos guardados en 'resultados_mangas.txt'")
     # Lista de mangas a procesar
-    mangas = [
-
-        {
-            "nombre": "Otome Game Sekai wa Mob ni Kibishii Sekai Desu",
-            "link_manga": "https://lectortmo.com/library/manga/41187/otome-game-sekai-wa-mob-ni-kibishii-sekai-desu",
-            "capitulo": "67.00"
-        },
-        {
-            "nombre": "Otome Game Sekai wa Mob ni Kibishii Sekai Desu",
-            "link_manga": "https://lectortmo.com/library/manga/41187/otome-game-sekai-wa-mob-ni-kibishii-sekai-desu",
-            "capitulo": "68"
-        }
-
-
-        # Agrega más mangas según sea necesario
-    ]
+    mangas = leer_mangas_desde_txt("resultados_mangas.txt")
 
     # Procesar cada manga en la lista
     descargar_manga(mangas, max_intentos=3, partes=10)
+
+    # Llamar a la función
+    eliminar_imagenes_png()

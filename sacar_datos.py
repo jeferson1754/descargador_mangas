@@ -63,7 +63,7 @@ def guardar_resultados_txt(data, filename):
 
 
 # URL de la página a analizar
-url = "http://inventarioncc.infinityfreeapp.com/Manga/?capitulos=3&accion=Filtro3"
+url = "http://inventarioncc.infinityfreeapp.com/Manga/?capitulos=1&accion=Filtro3"
 
 # Extrae y muestra los datos
 data = extraer_datos(url)
